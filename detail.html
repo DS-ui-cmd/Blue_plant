@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n-key="title.detail">蔚蓝守护 · 二级档案</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/tailwind.generated.css?v=2026041801">
+    <link rel="stylesheet" href="./css/subpage.css?v=2026041801">
+    <link rel="stylesheet" href="./css/detail-override.css?v=2026041801">
+</head>
+<body data-page="detail">
+    <!-- 视频背景层 -->
+    <video class="fixed inset-0 w-full h-full object-cover pointer-events-none" style="z-index: -100;" autoplay muted loop playsinline>
+        <source src="./assets/beijing%20copy.mp4" type="video/mp4">
+    </video>
+    <div class="nebula"></div>
+    <div class="page-shell">
+
+        <!-- ── 页头导航 ── -->
+        <header class="page-header">
+            <div>
+                <div class="badge" data-i18n-key="detail.badge.level">中国海洋专项情报 · 二级档案</div>
+                <h1 id="heroTitle" class="page-title">中国领海及专属经济区监测</h1>
+                <p id="heroSubtitle" class="page-subtitle">国家海洋安全与生态保护联动网络</p>
+            </div>
+            <div class="header-actions">
+                <a href="./index.html" class="cta-button" data-i18n-key="buttons.backToGlobal">← 返回全球主控</a>
+                <button id="deepLinkBtn" class="cta-button cta-green" data-i18n-key="buttons.toLevel3">进入第三级涉密档案 →</button>
+                <button class="lang-toggle" type="button" data-i18n-key="global.langToggle">中文 / EN</button>
+            </div>
+        </header>
+
+        <div class="content-grid">
+
+            <!-- ════ 第一层：核心展示区（全宽，占比大） ════ -->
+            <section class="hero-section glass-card" data-span="12" style="border-top: 3px solid #00DFC0; background: linear-gradient(135deg, rgba(2, 20, 35, 0.95), rgba(6, 10, 24, 0.98)) !important;">
+                <div class="hero-container">
+                    <!-- 英雄图片 -->
+                    <div class="hero-image-large">
+                        <img id="heroImage" src="./assets/earth_map.jpg" alt="region hero" style="filter: hue-rotate(190deg) saturate(1.2) brightness(0.8);">
+                        <div style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,0,0,0.6); padding: 0.5rem; border: 1px solid #4FC3F7; color: #4FC3F7; font-size: 12px; font-weight: bold; border-radius: 4px;">CMIG-4.0 LIVE FEED</div>
+                    </div>
+                    <!-- 核心信息 -->
+                    <div class="hero-info">
+                        <div>
+                            <p id="heroCoords" class="text-xs tracking-[0.4em] uppercase text-cyan-400 mb-2">区域坐标阵列锁定</p>
+                            <h1 id="missionTitle" class="text-4xl font-bold tracking-wide mb-4 text-white">专项海洋监测任务</h1>
+                            <p id="missionBody" class="text-white/80 leading-relaxed text-base">依托中国近海建立的三维立体监测网络，实现对黄海、东海、南海及主要内陆水系的实时水文气候分析。目前系统正在分析最新的卫星回传遥测数据及浮标采集样本。</p>
+                        </div>
+                        <div class="metrics-highlight" id="metricsGrid">
+                            <!-- 动态注入数据 -->
+                        </div>
+                        <div class="chips" id="partnerChips">
+                            <span class="chip">国家海洋环境预报中心</span>
+                            <span class="chip">自然资源部卫星网</span>
+                            <span class="chip">中科院生态联合实验室</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════ 第二层：关键情报区（中等卡片） ════ -->
+            <section class="glass-card" data-span="6">
+                <nav class="tab-nav">
+                    <button class="tab-btn" data-tab="spectral">频谱分析</button>
+                    <button class="tab-btn is-active" data-tab="telemetry">遥测数据</button>
+                </nav>
+                <div class="tab-content">
+                    <div class="tab-pane" data-pane="spectral">
+                        <canvas id="spectralCanvas" class="spectral-canvas rounded-2xl border border-white/10"></canvas>
+                        <p id="spectralNote" class="text-xs text-white/55 leading-relaxed mt-2"></p>
+                    </div>
+                    <div class="tab-pane is-active" data-pane="telemetry">
+                        <canvas id="telemetryCanvas" class="w-full rounded-xl border border-white/10"></canvas>
+                        <p id="telemetryNote" class="text-xs text-white/55 leading-relaxed mt-2"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass-card" data-span="6">
+                <div class="section-label" style="color: var(--cyan);" data-i18n-key="detail.section.metrics">关键指标</div>
+                <div id="statMatrix" class="stat-matrix mt-4"></div>
+            </section>
+
+            <!-- ════ 第三层：信息情报区（三列均衡） ════ -->
+            <section class="glass-card" data-span="4">
+                <div class="section-label" style="color: var(--amber);" data-i18n-key="detail.section.news">资讯信号</div>
+                <div id="newsList" class="list-column mt-4"></div>
+            </section>
+
+            <section class="glass-card" data-span="4">
+                <div class="section-label" style="color: var(--purple);" data-i18n-key="detail.section.brief">任务简报</div>
+                <div id="intelList" class="list-column rich-briefing mt-4"></div>
+            </section>
+
+            <section class="glass-card" data-span="4">
+                <div class="section-label" style="color: var(--green);" data-i18n-key="detail.section.signal">信号脉冲</div>
+                <div id="signalBoard" class="signal-board mt-4"></div>
+            </section>
+
+            <!-- ════ 第四层：媒体与行动区 ════ -->
+            <section class="glass-card media-panel" data-span="7">
+                <div class="section-label" style="color: var(--amber);" data-i18n-key="detail.section.media">媒体资源</div>
+                <div class="gallery-grid mt-4 mb-3" id="galleryGrid"></div>
+                <div class="flex flex-wrap gap-3 mt-auto">
+                    <a id="videoLink" target="_blank" rel="noopener" class="cta-button cta-ghost" data-i18n-key="detail.media.watchVideo">观看外部视频</a>
+                    <a id="newsroomLink" target="_blank" rel="noopener" class="cta-button cta-ghost" data-i18n-key="detail.media.viewNews">查看新闻源</a>
+                </div>
+            </section>
+
+            <section class="glass-card" data-span="5">
+                <nav class="tab-nav">
+                    <button class="tab-btn" data-tab="actions">行动指令</button>
+                    <button class="tab-btn is-active" data-tab="resources">资源链接</button>
+                </nav>
+                <div class="tab-content">
+                    <div class="tab-pane" data-pane="actions">
+                        <div id="actionsList" class="list-column compact actions-panel"></div>
+                    </div>
+                    <div class="tab-pane is-active" data-pane="resources">
+                        <div id="resourceList" class="list-grid list-grid--tight resource-panel"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════ 第五层：作战时间线（全宽底部） ════ -->
+            <section class="glass-card timeline-panel" data-span="12">
+                <div class="section-label" style="color: var(--purple);" data-i18n-key="detail.section.timeline">作战时间线</div>
+                <div class="timeline mt-4" id="timeline"></div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="./js/responsive.js?v=2026041801"></script>
+    <script src="./js/lang.js?v=2026041801"></script>
+    <script src="./js/data.js?v=2026041801"></script>
+    <script src="./js/archives-intel.js?v=2026041801"></script>
+    <script src="./js/archives-templates.js?v=2026041801"></script>
+    <script src="./js/archives-generators.js?v=2026041801"></script>
+    <script src="./js/detail-page.js?v=2026041801"></script>
+    <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const group = btn.closest('[data-span]');
+            const target = btn.dataset.tab;
+            group.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('is-active', b === btn));
+            group.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('is-active', p.dataset.pane === target));
+            window.dispatchEvent(new Event('resize'));
+        });
+    });
+    </script>
+</body>
+</html>

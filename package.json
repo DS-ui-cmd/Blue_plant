@@ -1,0 +1,27 @@
+{
+  "name": "jisuanjisheji",
+  "version": "1.0.0",
+  "description": "海洋环境保护科幻主题网页开发文档",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:css": "tailwindcss -i ./css/tailwind-source.css -o ./css/tailwind.generated.css --watch",
+    "build:css": "tailwindcss -i ./css/tailwind-source.css -o ./css/tailwind.generated.css --minify",
+    "server": "node server.js",
+    "server:dev": "node --watch server.js",
+    "cleanup": "node cleanup-ports.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.9",
+    "tailwindcss": "^3.4.3"
+  }
+}

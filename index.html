@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n-key="title.index">蔚蓝守护 - 海洋环境保护科幻交互网页</title>
+    <!-- 引入字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="./css/tailwind.generated.css?v=2026041801">
+    <link rel="stylesheet" href="./css/style.css?v=2026041801">
+    <link rel="stylesheet" href="./css/components/ai-assistant.css?v=2026041801">
+    
+    <!-- 引入框架 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body class="overflow-hidden m-0 p-0 text-white select-none font-sans" data-page="index">
+
+    <!-- 视频背景层 -->
+    <video id="bgVideo" class="fixed inset-0 w-full h-full object-cover pointer-events-none" style="z-index: -100;" autoplay muted loop playsinline>
+        <source src="./assets/beijing.mp4" type="video/mp4">
+        你的浏览器不支持视频播放
+    </video>
+
+    <!-- 深空背景层 -->
+    <div class="space-bg fixed inset-0 z-[-2] pointer-events-none" style="z-index: -50;"></div>
+
+    <!-- 海洋洋流台风动态背景层 -->
+    <canvas id="oceanCurrentCanvas" class="fixed inset-0 z-[-1] opacity-50 pointer-events-none" style="z-index: -40;"></canvas>
+
+    <!-- 粒子星云层 -->
+    <div id="stars-container" class="fixed inset-0 z-[-1] pointer-events-none opacity-30" style="z-index: -30;"></div>
+
+    <!-- 高科技数字HUD背景层 (填满背景的底层数据流) -->
+    <canvas id="bgDataCanvas" class="fixed inset-0 z-[0] opacity-20 pointer-events-none" style="z-index: -20;"></canvas>
+
+    <!-- HUD 全局边角科幻装饰 -->
+    <div class="hud-frame pointer-events-none fixed inset-4 border border-shallowBlue/20 z-[1] rounded-2xl" style="z-index: -10;">
+        <div class="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-shallowBlue/60 rounded-tl-2xl shadow-[0_0_15px_rgba(79,195,247,0.5)]"></div>
+        <div class="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-shallowBlue/60 rounded-tr-2xl shadow-[0_0_15px_rgba(79,195,247,0.5)]"></div>
+        <div class="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-shallowBlue/60 rounded-bl-2xl shadow-[0_0_15px_rgba(79,195,247,0.5)]"></div>
+        <div class="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-shallowBlue/60 rounded-br-2xl shadow-[0_0_15px_rgba(79,195,247,0.5)]"></div>
+    </div>
+
+    <!-- 3D地球画布层 -->
+    <canvas id="earthCanvas" class="fixed inset-0 w-full h-full block" style="pointer-events: auto !important; z-index: 5 !important;"></canvas>
+
+    <!-- --- 最佳实践：左侧无框科幻 HUD --- -->
+    <aside class="fui-panel fui-left" id="left-panel">
+        <!-- 模块1：实时威胁 -->
+        <div class="fui-section left-aligned" style="--theme-color: #FF5252">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-1.5 h-1.5 bg-dangerRed animate-pulse shadow-[0_0_8px_#FF5252]"></div>
+                <div class="text-xs text-dangerRed tracking-[0.2em] uppercase font-bold text-glow-red" data-i18n-key="hud.left.section1.title">实时威胁播报</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.left.loss">经济损失（美元）</div>
+                <div class="text-4xl font-mono text-white text-glow-red tracking-tight" id="stat-economy">0</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.left.families">受影响家庭数</div>
+                <div class="text-3xl font-mono text-white/90 tracking-tight" id="stat-families">0</div>
+            </div>
+            <div>
+                <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.left.fatality">伤亡指数</div>
+                <div class="text-3xl font-mono text-dangerRed text-glow-red tracking-tight" id="stat-lives">0</div>
+            </div>
+        </div>
+
+        <!-- 模块2：全球生态指数 -->
+        <div class="fui-section left-aligned" style="--theme-color: #4FC3F7">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-1.5 h-1.5 bg-shallowBlue animate-pulse shadow-[0_0_8px_#4FC3F7]"></div>
+                <div class="text-xs text-shallowBlue tracking-[0.2em] uppercase font-bold text-glow-cyan" data-i18n-key="hud.left.section2.title">全球生态指数</div>
+            </div>
+            <div class="mb-3">
+                <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.left.microplastics">微塑料浓度</div>
+                <div class="text-2xl font-mono text-warnOrange font-bold tracking-tight mb-2" id="val-plastic">82%</div>
+                <div class="w-full h-[4px] bg-white/10 relative rounded-full">
+                    <div id="bar-plastic" class="absolute left-0 top-0 h-full bg-warnOrange shadow-[0_0_8px_#FF9800] rounded-full" style="width:82%"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.left.co2">CO₂ 吸收率</div>
+                <div class="text-2xl font-mono text-ecoGreen font-bold tracking-tight mb-2" id="val-co2">64%</div>
+                <div class="w-full h-[4px] bg-white/10 relative rounded-full">
+                    <div id="bar-co2" class="absolute left-0 top-0 h-full bg-ecoGreen shadow-[0_0_8px_#00DFC0] rounded-full" style="width:64%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.left.acid">海水酸化指数</div>
+                <div class="text-2xl font-mono text-dangerRed font-bold tracking-tight text-glow-red mb-2" id="val-acid">41%</div>
+                <div class="w-full h-[4px] bg-white/10 relative rounded-full">
+                    <div id="bar-acid" class="absolute left-0 top-0 h-full bg-dangerRed shadow-[0_0_8px_#FF5252] rounded-full" style="width:41%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模块3：截获资讯 -->
+        <div class="fui-section left-aligned h-36 flex flex-col" style="--theme-color: #00DFC0">
+            <div class="text-xs text-ecoGreen tracking-[0.2em] uppercase font-bold mb-3 text-glow-cyan" data-i18n-key="hud.left.section3.title">截获通讯</div>
+            <div id="news-ticker" class="flex-1 overflow-hidden relative text-[11px] text-white/70 leading-relaxed font-mono"></div>
+        </div>
+    </aside>
+
+    <!-- --- 最佳实践：右侧无框科幻 HUD --- -->
+    <aside class="fui-panel fui-right" id="right-panel">
+        <!-- 模块1：极端气象网 -->
+        <div class="fui-section right-aligned" style="--theme-color: #7B61FF">
+            <div class="flex items-center justify-end gap-2 mb-4">
+                <div class="text-xs text-auroraPurple tracking-[0.2em] uppercase font-bold text-glow-cyan" data-i18n-key="hud.right.section1.title">极端气象网</div>
+                <div class="w-1.5 h-1.5 bg-auroraPurple animate-pulse shadow-[0_0_8px_#7B61FF]"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-y-4 gap-x-6 text-right">
+                <div>
+                    <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.right.tide">潮位变化</div>
+                    <div class="text-3xl font-mono text-white text-glow-cyan tracking-tight" id="val-tide">+1.42m</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.right.wave">浪高</div>
+                    <div class="text-3xl font-mono text-white text-glow-cyan tracking-tight" id="val-wave">3.1m</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.right.wind">风速</div>
+                    <div class="text-3xl font-mono text-warnOrange text-glow-orange tracking-tight" id="val-wind">184km/h</div>
+                </div>
+                <div>
+                    <div class="text-[11px] text-white/50 tracking-widest uppercase mb-1 font-condensed" data-i18n-key="hud.right.dir">洋流方向</div>
+                    <div class="text-3xl font-mono text-white text-glow-cyan tracking-tight" id="val-dir">SSE 12°</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模块2：流量监控节点 -->
+        <div class="fui-section right-aligned" style="--theme-color: #4FC3F7">
+            <div class="text-xs text-shallowBlue tracking-[0.2em] uppercase font-bold mb-4 text-glow-cyan" data-i18n-key="hud.right.section2.title">流量监控节点</div>
+            <div class="flex flex-col gap-3">
+                <div class="flex justify-between items-end">
+                    <span id="stat-queries" class="text-3xl font-mono text-ecoGreen text-glow-cyan tracking-tight">1,482,903</span>
+                    <span class="text-[11px] text-white/50 uppercase tracking-widest font-condensed" data-i18n-key="hud.right.queries">每秒查询</span>
+                </div>
+                <div class="fui-divider"></div>
+                <div class="flex justify-between items-end">
+                    <span id="stat-users" class="text-3xl font-mono text-shallowBlue text-glow-cyan tracking-tight">452,110</span>
+                    <span class="text-[11px] text-white/50 uppercase tracking-widest font-condensed" data-i18n-key="hud.right.active">活跃终端</span>
+                </div>
+                <div class="fui-divider"></div>
+                <div class="flex justify-between items-end">
+                    <span id="stat-audience" class="text-3xl font-mono text-auroraPurple text-glow-cyan tracking-tight">8,930,221</span>
+                    <span class="text-[11px] text-white/50 uppercase tracking-widest font-condensed" data-i18n-key="hud.right.audience">全球受众</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模块3：遥测系统波形与标语 -->
+        <div class="fui-section right-aligned" style="--theme-color: #4FC3F7">
+            <div class="text-xs text-shallowBlue tracking-[0.2em] uppercase font-bold mb-3 text-glow-cyan" data-i18n-key="hud.right.section3.title">遥测波形</div>
+            <canvas id="miniChartCanvas" class="w-full h-16 mb-4 opacity-80"></canvas>
+            <div class="flex justify-between items-center text-[11px] text-white/50 tracking-widest uppercase mb-2 font-condensed">
+                <span id="sys-rot" class="font-mono text-white/80 tracking-widest text-sm">0.001 rad/s</span>
+                <span data-i18n-key="hud.right.orbital">轨道速度</span>
+            </div>
+            <div class="flex justify-between items-center text-[11px] text-white/50 tracking-widest uppercase mb-4 font-condensed">
+                <span id="sys-alt" class="font-mono text-white/80 tracking-widest text-sm">20.000 km</span>
+                <span data-i18n-key="hud.right.sonar">声呐射程</span>
+            </div>
+            <div class="text-xs text-shallowBlue/70 italic tracking-widest" id="slogan-text" data-i18n-key="hud.right.slogan">
+                "系统：全球海洋监控已激活"
+            </div>
+        </div>
+    </aside>
+
+    <!-- 全局导航 -->
+    <header class="nav-box fixed top-0 left-0 w-full px-10 py-8 flex justify-between items-start z-20 pointer-events-none">
+        <div class="flex flex-col pointer-events-none">
+            <h1 class="text-4xl font-condensed font-bold tracking-[0.3em] text-shallowBlue drop-shadow-[0_0_15px_rgba(79,195,247,0.8)]" data-i18n-key="index.heading">蔚蓝守护（BLUE AEGIS）</h1>
+            <div class="flex items-center gap-4 mt-3">
+                <div class="h-[2px] w-12 bg-shallowBlue"></div>
+                <p class="text-xs text-white/80 tracking-[0.4em]" data-i18n-key="nav.mission">深海生态智能监控与气象预警中枢</p>
+            </div>
+        </div>
+        <div class="text-right flex gap-8 items-center pointer-events-none">
+            <div class="flex gap-8 text-xs tracking-[0.3em] font-condensed items-center bg-deepBlue/40 px-6 py-2 rounded-full border border-shallowBlue/30 backdrop-blur-sm pointer-events-auto">
+                <span class="text-ecoGreen animate-pulse font-bold" data-i18n-key="status.online">● 神经链路在线</span>
+                <a href="#" class="text-white hover:text-shallowBlue transition-all text-shadow-glow" data-i18n-key="nav.console">控制终端</a>
+                <a href="#" class="text-white hover:text-shallowBlue transition-all text-shadow-glow" data-i18n-key="nav.archive">数据档案</a>
+            </div>
+            <button id="portalToggleBtn" type="button" class="layer-toggle pointer-events-auto">
+                <span class="state-earth">进入中国海洋详情面板</span>
+                <span class="state-portal">返回轨道地球视图</span>
+            </button>
+            <button id="searchToggleBtn" type="button" class="search-toggle pointer-events-auto text-xs tracking-[0.3em] font-condensed flex items-center gap-3 border border-shallowBlue/40 rounded-full px-5 py-2 text-shallowBlue/90 hover:text-white hover:border-white/50 transition-all">
+                <span>数据检索</span>
+                <span class="search-toggle__hint">CTRL · K</span>
+            </button>
+            <button id="helpToggleBtn" type="button" class="help-toggle pointer-events-auto text-xs tracking-[0.3em] font-condensed flex items-center gap-2 border border-shallowBlue/40 rounded-full px-4 py-2 text-shallowBlue/90 hover:text-white hover:border-white/50 transition-all">
+                <span>?</span>
+                <span>帮助</span>
+            </button>
+            <button class="lang-toggle pointer-events-auto" type="button" data-i18n-key="global.langToggle">中文 / EN</button>
+        </div>
+    </header>
+
+    <!-- 帮助说明模态框 -->
+    <div id="helpModal" class="help-layer" aria-hidden="true">
+        <div class="help-backdrop"></div>
+        <div class="help-panel">
+            <header class="help-header">
+                <h2>交互指南与图例说明</h2>
+                <button id="helpCloseBtn" class="help-close">×</button>
+            </header>
+            <div class="help-body">
+                <div class="help-section">
+                    <h3>🌍 地球交互</h3>
+                    <ul>
+                        <li><strong>拖拽地球：</strong>左键按住并拖动可旋转地球视角</li>
+                        <li><strong>滚轮缩放：</strong>滚动鼠标滚轮可放大/缩小视角</li>
+                        <li><strong>点击标记点：</strong>点击彩色圆形标记可查看监测数据</li>
+                        <li><strong>点击金色星形标记：</strong>打开对应国家的水文气候官方网站</li>
+                        <li><strong>点击中国版图：</strong>打开中国地形地图弹窗，查看国内监测点</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3>📍 图例说明</h3>
+                    <div class="legend-grid">
+                        <div class="legend-item">
+                            <div class="legend-marker" style="color: #4FC3F7;">●</div>
+                            <span>青蓝色标记 = 沿海港口/城市监测点</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-marker" style="color: #00DFC0;">●</div>
+                            <span>青绿色标记 = 重要水域监测点</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-marker" style="color: #7B61FF;">●</div>
+                            <span>紫色标记 = 内陆湖泊监测点</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-marker" style="color: #FF9800;">●</div>
+                            <span>橙色标记 = 生态保护区监测点</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-marker" style="color: #FFD700;">◆</div>
+                            <span>金色方形标记 = 国际水文气候官网链接</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>🗺️ 中国地形地图弹窗</h3>
+                    <ul>
+                        <li><strong>打开方式：</strong>在3D地球上点击中国版图区域</li>
+                        <li><strong>标点交互：</strong>点击地图上的彩色标点可查看详细信息或跳转子页面</li>
+                        <li><strong>进入情报面板：</strong>点击"进入中国海洋详情面板"按钮切换到中国海洋监测仪表盘</li>
+                        <li><strong>关闭弹窗：</strong>点击关闭按钮、背景或按Esc键</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3>💡 使用提示</h3>
+                    <ul>
+                        <li>系统会在5秒无操作后自动开启地球自动旋转</li>
+                        <li>所有数据为实时监测数据，自动持续更新</li>
+                        <li>使用"数据检索"功能快速定位感兴趣的监测点（快捷键 Ctrl+K）</li>
+                        <li>各国官方网站链接在新标签页打开，不影响当前监测界面</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 中国地形地图弹窗 -->
+    <div id="chinaMapModal" class="china-map-layer" aria-hidden="true">
+        <div class="china-map-backdrop"></div>
+        <div class="china-map-panel">
+            <header class="china-map-header">
+                <div>
+                    <p class="china-map-tag">CHINA TERRAIN & HYDROLOGY MAP</p>
+                    <h2>中国水域地形情报图</h2>
+                </div>
+                <button id="chinaMapCloseBtn" class="china-map-close">← 返回轨道视图</button>
+            </header>
+            <div class="china-map-body">
+                <img src="./assets/china.png" alt="中国地图" class="china-map-image">
+                <svg id="chinaMapSvg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                    <!-- 中国大陆轮廓 -->
+                    <path d="M 20 25 L 25 24 L 30 25 L 35 24 L 40 25 L 45 26 L 50 25 L 55 26 L 60 25 L 65 26 L 70 25 L 75 26 L 78 28 L 80 30 L 82 35 L 83 40 L 82 45 L 80 50 L 78 55 L 76 60 L 74 65 L 72 68 L 70 70 L 65 72 L 60 71 L 55 70 L 50 69 L 45 68 L 40 67 L 35 68 L 30 69 L 25 70 L 20 69 L 15 68 L 10 67 L 8 65 L 10 60 L 12 55 L 14 50 L 15 45 L 14 40 L 12 35 L 10 30 L 12 27 Z" fill="rgba(79,195,247,0.08)" stroke="rgba(79,195,247,0.5)" stroke-width="0.3"/>
+
+                    <!-- 省份分界线 -->
+                    <g stroke="rgba(79,195,247,0.3)" stroke-width="0.2" fill="none" stroke-dasharray="0.5,0.3">
+                        <path d="M 25 35 L 45 45 L 65 50"/>
+                        <path d="M 20 45 L 40 50 L 60 55"/>
+                        <path d="M 30 30 L 50 40 L 70 45"/>
+                        <path d="M 15 50 L 35 55 L 55 60"/>
+                        <path d="M 22 40 L 42 48 L 62 52"/>
+                        <path d="M 28 28 L 48 38 L 68 43"/>
+                        <path d="M 35 32 L 55 42 L 70 48"/>
+                    </g>
+
+                    <!-- 海域标注 -->
+                    <text x="72" y="28" font-size="1.5" fill="rgba(79,195,247,0.4)" font-weight="bold">渤海</text>
+                    <text x="75" y="38" font-size="1.5" fill="rgba(79,195,247,0.4)" font-weight="bold">黄海</text>
+                    <text x="78" y="48" font-size="1.5" fill="rgba(79,195,247,0.4)" font-weight="bold">东海</text>
+                    <text x="55" y="75" font-size="1.5" fill="rgba(79,195,247,0.4)" font-weight="bold">南海</text>
+                </svg>
+            </div>
+            <footer class="china-map-footer">
+                <button id="chinaMapPortalBtn" class="portal-btn primary">进入中国海洋详情面板 →</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- 中国海洋情报中枢 V2 -->
+    <div id="portalLayer" class="portal-layer" aria-hidden="true">
+        <div class="portal-backdrop"></div>
+        <div class="portal-v2">
+            <div class="portal-v2__scanlines" aria-hidden="true"></div>
+            <div class="portal-v2__zoom-wrap">
+
+            <!-- 顶部导航栏 -->
+            <header class="portal-v2__topbar">
+                <div class="portal-v2__brand">
+                    <div class="portal-v2__brand-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div>
+                        <p class="portal-v2__brand-tag">CHINA MARITIME INTELLIGENCE GRID · CMIG-4.0 · LIVE</p>
+                        <h2 class="portal-v2__brand-title">中国海洋情报中枢</h2>
+                    </div>
+                </div>
+                <nav class="portal-nav" role="tablist" aria-label="情报分区">
+                    <button type="button" class="portal-nav__item portal-nav__item--active" data-filter="coastal" aria-pressed="true">近岸预报</button>
+                    <button type="button" class="portal-nav__item" data-filter="disaster" aria-pressed="false">防灾预警</button>
+                    <button type="button" class="portal-nav__item" data-filter="bluecarbon" aria-pressed="false">蓝碳工程</button>
+                    <button type="button" class="portal-nav__item" data-filter="resource" aria-pressed="false">资源服务</button>
+                    <button type="button" class="portal-nav__item" data-filter="transport" aria-pressed="false">航运气象</button>
+                </nav>
+                <button type="button" class="portal-v2__close-btn">← 返回轨道视图</button>
+            </header>
+
+            <!-- 三列主仪表盘 -->
+            <div class="portal-v2__dashboard">
+
+                <!-- 左列：频谱分析 + 系统总览 + 监测区 -->
+                <aside class="portal-v2__left">
+                    <div class="portal-widget">
+                        <div class="portal-widget__head">
+                            <p class="portal-tag">SPECTRAL RADAR</p>
+                            <h4>海域频谱分析</h4>
+                        </div>
+                        <div class="portal-radar-wrap">
+                            <canvas id="portalRadarCanvas"></canvas>
+                        </div>
+                        <p id="portalRadarNote" class="portal-widget__note">5 海域 · 实时多维指标频谱映射</p>
+                    </div>
+
+                    <div class="portal-widget">
+                        <div class="portal-widget__head">
+                            <p class="portal-tag">RESOURCE STACK</p>
+                            <h4>系统总览</h4>
+                        </div>
+                        <div id="portalHeadlineStats" class="portal-stat-grid-v2"></div>
+                    </div>
+
+                    <div class="portal-widget">
+                        <div class="portal-widget__head">
+                            <p class="portal-tag">ACTIVE ZONES · 5/5</p>
+                            <h4>监测区状态</h4>
+                        </div>
+                        <div class="portal-zone-list">
+                            <div class="portal-zone-item" data-level="warn">
+                                <span class="portal-zone-item__dot"></span>
+                                <span class="portal-zone-item__name">黄海 YH-07</span>
+                                <span class="portal-zone-item__badge">黄色预警</span>
+                            </div>
+                            <div class="portal-zone-item" data-level="alert">
+                                <span class="portal-zone-item__dot"></span>
+                                <span class="portal-zone-item__name">渤海湾 BH-02</span>
+                                <span class="portal-zone-item__badge">橙色预警</span>
+                            </div>
+                            <div class="portal-zone-item" data-level="ok">
+                                <span class="portal-zone-item__dot"></span>
+                                <span class="portal-zone-item__name">长江口 YZ-11</span>
+                                <span class="portal-zone-item__badge">正常监测</span>
+                            </div>
+                            <div class="portal-zone-item" data-level="ok">
+                                <span class="portal-zone-item__dot"></span>
+                                <span class="portal-zone-item__name">珠江口 PRD-05</span>
+                                <span class="portal-zone-item__badge">正常监测</span>
+                            </div>
+                            <div class="portal-zone-item" data-level="info">
+                                <span class="portal-zone-item__dot"></span>
+                                <span class="portal-zone-item__name">滇池 YN-04</span>
+                                <span class="portal-zone-item__badge">试点运行</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- 中列：主情报展示 + 预报条带 -->
+                <main class="portal-v2__main">
+                    <section class="portal-hero-v2" id="portalHero">
+                        <div class="portal-hero-v2__media">
+                            <img id="portalHeroImage" src="" alt="重点海域图像" />
+                            <div class="portal-hero-v2__hud-overlay" aria-hidden="true">
+                                <div class="portal-hero-v2__corner _tl"></div>
+                                <div class="portal-hero-v2__corner _tr"></div>
+                                <div class="portal-hero-v2__corner _bl"></div>
+                                <div class="portal-hero-v2__corner _br"></div>
+                                <div class="portal-hero-v2__reticle"></div>
+                            </div>
+                            <div class="portal-hero-v2__meta-bar">
+                                <div class="portal-hero-v2__meta-item">
+                                    <span>24h 预警等级</span>
+                                    <strong id="portalHeroLevel">黄色</strong>
+                                </div>
+                                <div class="portal-hero-v2__meta-item">
+                                    <span>监测编号</span>
+                                    <strong id="portalHeroCode">YH-07</strong>
+                                </div>
+                                <div class="portal-hero-v2__meta-item">
+                                    <span>坐标系</span>
+                                    <strong>WGS-84</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="portal-hero-v2__info">
+                            <p class="portal-hero-v2__region" id="portalHeroRegion">中国北方海域 · 黄海</p>
+                            <h3 class="portal-hero-v2__name" id="portalHeroName">黄海绿潮防线</h3>
+                            <p class="portal-hero-v2__summary" id="portalHeroSummary"></p>
+                            <div class="portal-hero-v2__stats" id="portalHeroStats"></div>
+                            <div class="portal-hero-v2__actions">
+                                <a id="portalHeroDetail" class="portal-btn primary" href="detail.html?slug=yellow-sea-ecoshield">查看数据档案</a>
+                                <button id="portalHeroFocus" class="portal-btn ghost" type="button">在 3D 地球聚焦</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="portal-forecast-v2">
+                        <header class="portal-forecast-v2__head">
+                            <div>
+                                <p class="portal-tag">COASTAL FORECAST · 48H WINDOW</p>
+                                <h4>近岸海况实时预报</h4>
+                            </div>
+                            <button class="portal-mini-link" type="button" id="portalSyncForecast">同步到地球视角</button>
+                        </header>
+                        <div class="portal-forecast-v2__grid" id="forecastList"></div>
+                    </section>
+                </main>
+
+                <!-- 右列：遥测 + 情报 + 重点行动 -->
+                <aside class="portal-v2__right">
+                    <div class="portal-widget">
+                        <div class="portal-widget__head">
+                            <p class="portal-tag">LIVE TELEMETRY</p>
+                            <h4>实时遥测波形</h4>
+                        </div>
+                        <canvas id="portalTelemetryCanvas" class="portal-telemetry-canvas"></canvas>
+                        <div class="portal-telemetry-readings">
+                            <div><span>海温异常</span><strong id="tel-temp">+0.4°C</strong></div>
+                            <div><span>盐度偏差</span><strong id="tel-salt">±0.12PSU</strong></div>
+                            <div><span>叶绿素</span><strong id="tel-chloro">3.4mg/m³</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="portal-widget portal-widget--news">
+                        <div class="portal-widget__head">
+                            <p class="portal-tag">INTELLIGENCE BOARD</p>
+                            <h4>最新情报</h4>
+                            <a class="portal-mini-link" href="deep-archive.html" target="_blank" rel="noopener">查看档案</a>
+                        </div>
+                        <div id="portalNewsList" class="portal-news-v2"></div>
+                    </div>
+
+                    <div class="portal-widget">
+                        <div class="portal-widget__head">
+                            <p class="portal-tag">RESOURCE STACK</p>
+                            <h4>重点行动</h4>
+                        </div>
+                        <div id="portalDeepdiveList" class="portal-deepdive-v2"></div>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- 底部状态栏 -->
+            <footer class="portal-v2__statusbar">
+                <div class="portal-v2__sb-item">
+                    <span class="portal-v2__sb-dot _ok"></span>
+                    <span>612 监测站在线</span>
+                </div>
+                <div class="portal-v2__sb-item">
+                    <span class="portal-v2__sb-dot _ok"></span>
+                    <span>11 预报中心激活</span>
+                </div>
+                <div class="portal-v2__sb-item">
+                    <span>系统时间&nbsp;<strong id="portalSystemTime">--:--:--</strong></span>
+                </div>
+                <div class="portal-v2__sb-item portal-v2__sb-item--warn">
+                    <span class="portal-v2__sb-dot _warn"></span>
+                    <span>2 处活跃预警</span>
+                </div>
+                <div class="portal-v2__sb-item portal-v2__sb-item--right">
+                    <span>数据协议&nbsp;CMIG v4.0.2</span>
+                </div>
+            </footer>
+            </div><!-- /.portal-v2__zoom-wrap -->
+        </div>
+    </div>
+
+    <!-- 交互提示 -->
+    <div class="tip-box fixed bottom-10 left-1/2 -translate-x-1/2 text-xs tracking-[0.5em] text-shallowBlue/80 text-center transition-opacity duration-1000 z-10 pointer-events-none drop-shadow-[0_0_5px_rgba(79,195,247,0.8)] font-bold bg-deepBlue/50 px-8 py-3 rounded-full border border-shallowBlue/20 backdrop-blur-md" id="tipBox" data-i18n-key="tip.instructions">
+        [ 拖拽: 旋转视角 • 滚轮: 缩放 • 点击: 获取情报 ]
+    </div>
+
+    <!-- 悬浮窗与详情页保持不变 (略) -->
+    <div class="float-window fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] hidden z-30" id="floatWindow">
+        <div class="absolute inset-0 bg-deepBlue/60 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden holographic-bg"></div>
+        <div class="relative z-10 p-5 flex flex-col h-full pointer-events-auto">
+            <div class="flex justify-between items-start mb-2 border-b border-white/10 pb-2">
+                <div>
+                    <div class="text-[10px] tracking-widest text-white/50 uppercase mb-1 font-condensed" id="windowSub">监测海域坐标位置</div>
+                    <h2 id="windowTitle" class="text-lg font-bold text-white tracking-wider">海域名称</h2>
+                </div>
+                <button class="close-btn text-white/40 hover:text-white transition-colors p-1" id="closeBtn">×</button>
+            </div>
+            <div class="w-full h-32 rounded border border-white/10 overflow-hidden relative mb-3 group">
+                <img id="windowImage" src="" alt="cover" class="w-full h-full object-cover opacity-80 mix-blend-screen" />
+            </div>
+            <div class="window-content text-[12px] text-white/80 leading-relaxed font-light mb-3" id="windowContent"></div>
+            <button id="viewDetailsBtn" class="w-full py-2 bg-shallowBlue/10 hover:bg-shallowBlue/30 border border-shallowBlue/40 text-shallowBlue text-xs font-condensed tracking-[0.2em] transition-all" data-i18n-key="buttons.viewDetail">
+                进入高层级数据档案
+            </button>
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-white/5 text-[10px] text-white/50 tracking-widest uppercase font-condensed">
+                <button id="prevBtn" class="hover:text-shallowBlue" data-i18n-key="buttons.prevMarker">← 上一个监测点</button>
+                <button id="nextBtn" class="hover:text-shallowBlue" data-i18n-key="buttons.nextMarker">下一个监测点 →</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailOverlay" class="fixed inset-0 z-[100] hidden bg-deepBlue/98 backdrop-blur-3xl flex flex-col p-10 opacity-0 pointer-events-none">
+        <!-- 详情页内容保持一致... -->
+        <div class="relative z-10 w-full h-full flex flex-col pointer-events-auto max-w-7xl mx-auto">
+            <header class="border-b border-shallowBlue/30 pb-4 mb-8 flex justify-between items-end">
+                <div>
+                    <div id="detailType" class="text-shallowBlue font-condensed tracking-widest text-sm mb-2 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-shallowBlue rounded-full animate-pulse"></span>
+                        <span id="detailTypeStr">核心数据库档案</span>
+                    </div>
+                    <h1 id="detailTitle" class="text-4xl font-bold text-white tracking-widest"></h1>
+                    <p id="detailCoords" class="text-sm text-white/60 tracking-[0.3em] uppercase mt-2"></p>
+                </div>
+                <button id="closeDetailBtn" class="border border-white/20 px-6 py-2 text-white/80 tracking-[0.2em] text-xs font-condensed transition-all" data-i18n-key="detailOverlay.close">返回全球轨道监控</button>
+            </header>
+            <div class="flex-1 grid grid-cols-12 gap-12 overflow-hidden">
+                <div class="col-span-5 h-full flex flex-col">
+                    <div class="w-full h-2/3 border border-shallowBlue/30 relative overflow-hidden">
+                        <img id="detailImage" src="" class="w-full h-full object-cover opacity-80" />
+                    </div>
+                    <div class="mt-8 flex-1 border border-shallowBlue/20 p-5 relative bg-black/20">
+                        <h3 class="text-xs text-shallowBlue/80 tracking-widest font-condensed mb-4 border-b border-shallowBlue/10 pb-2" data-i18n-key="detailOverlay.statsTitle">卫星遥测分析数据</h3>
+                        <div id="detailStats" class="grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-sm text-white/90"></div>
+                    </div>
+                </div>
+                <div class="col-span-7 h-full flex flex-col overflow-y-auto custom-scrollbar" id="detailDescription"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜索面板 -->
+    <div id="searchPanel" class="search-panel hidden" aria-hidden="true">
+        <div id="searchBackdrop" class="search-panel__backdrop"></div>
+        <div class="search-panel__shell">
+            <div class="search-panel__header">
+                <div>
+                    <p class="search-panel__badge">OCEAN INTEL</p>
+                    <h3>全球海域情报检索</h3>
+                    <p class="search-panel__subtitle">联通后端数据库，快速定位 16 处监测点与详细档案</p>
+                </div>
+                <button id="searchCloseBtn" class="search-panel__close" type="button">×</button>
+            </div>
+            <div class="search-panel__input">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10.5 3a7.5 7.5 0 0 1 5.95 12.06l4 4a1 1 0 0 1-1.32 1.5l-.1-.09-4-4A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 3.91 9.4l.2-.2.2-.18A5.5 5.5 0 0 0 10.5 5z" fill="currentColor"/>
+                </svg>
+                <input id="searchInput" type="text" placeholder="输入海域名称、污染类型、坐标或关键事件" autocomplete="off" />
+                <kbd>Ctrl / ⌘ + K</kbd>
+            </div>
+            <div id="searchStatus" class="search-panel__status">
+                连通本地 API 后即可检索数据。若未启动后端，会自动提示。
+            </div>
+            <div id="searchResults" class="search-panel__results"></div>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer fixed bottom-4 w-full text-center text-[9px] text-white/20 tracking-[0.4em] z-10 pointer-events-none uppercase font-condensed" data-i18n-key="footer.text">
+        全球海洋守护倡议 · 数据协议 v4.0.2
+    </div>
+
+    <!-- 引入JS脚本 -->
+    <script>
+        window.__BLUE_AEGIS_API__ = window.__BLUE_AEGIS_API__ || 'http://localhost:4000';
+    </script>
+    <script src="./js/responsive.js?v=2026041801"></script>
+    <script src="./js/lang.js?v=2026041801"></script>
+    <script src="./js/data.js?v=2026041801"></script>
+    <script src="./js/earth.js?v=2026041801"></script>
+    <script src="./js/interaction.js?v=2026041801"></script>
+    <script src="./js/effects/presets.js?v=2026041801"></script>
+    <script src="./js/effects/ocean-current-canvas.js?v=2026041801"></script>
+    <script src="./js/effects/starfield.js?v=2026041801"></script>
+    <script src="./js/effects/background-hud-canvas.js?v=2026041801"></script>
+    <script src="./js/effects/environmental-counter.js?v=2026041801"></script>
+    <script src="./js/effects/weather-dynamics.js?v=2026041801"></script>
+    <script src="./js/effects/mini-chart.js?v=2026041801"></script>
+    <script src="./js/effects/information-ticker.js?v=2026041801"></script>
+    <script src="./js/effects/slogan-rotator.js?v=2026041801"></script>
+    <script src="./js/main.js?v=2026041801"></script>
+    <script src="./js/china-map.js?v=2026041801"></script>
+    <script src="./js/help-modal.js?v=2026041801"></script>
+    <script src="./js/portal.js?v=2026041801"></script>
+    <script src="./js/search.js?v=2026041801"></script>
+    <script src="./js/ai-assistant.js?v=2026041801"></script>
+</body>
+</html>
